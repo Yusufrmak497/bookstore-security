@@ -133,3 +133,23 @@ def test_cors_restricted_to_allow_list(monkeypatch):
     finally:
         monkeypatch.undo()
         importlib.reload(main)
+
+
+def test_reviews_page_renders_text_not_html():
+    # CWE-79 regression: the vulnerable page did
+    # `box.innerHTML = reviews.map(t => '<p>' + t + '</p>')`, so a stored review
+    # like `<img src=x onerror=...>` executed in every visitor's browser.
+    import re
+    from pathlib import Path
+
+    html = (Path(__file__).parent / "static" / "index.html").read_text()
+
+    # No HTML-parsing sinks for the untrusted review data.
+    assert not re.search(r"\.innerHTML\s*\+?=", html)
+    assert not re.search(r"\.outerHTML\s*\+?=", html)
+    assert "insertAdjacentHTML" not in html
+    assert "document.write" not in html
+
+    # Reviews are rendered as text into <p> elements.
+    assert re.search(r"\.textContent\s*=", html)
+    assert "createElement('p')" in html

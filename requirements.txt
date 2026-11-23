@@ -5,3 +5,7 @@ uvicorn
 httpx
 pytest
 requests==2.34.2
+# Floors for transitive deps, so existing environments get upgraded too (pip keeps old
+# versions that still satisfy requests, see evidence/pip-audit-installed-env.txt).
+urllib3>=2.8.0
+idna>=3.15

@@ -96,10 +96,14 @@ class SummarizeIn(BaseModel):
 
 @app.get("/books")
 def search_books(q: str = ""):
-    # VULN: SQL injection — user input concatenated straight into the query
-    query = f"SELECT id, title, author FROM books WHERE title LIKE '%{q}%'"
+    # Parameterized query; escape LIKE metacharacters so user-typed % and _
+    # (and the escape char itself) are matched literally.
+    escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     with closing(get_db()) as conn:
-        rows = conn.execute(query).fetchall()
+        rows = conn.execute(
+            "SELECT id, title, author FROM books WHERE title LIKE ? ESCAPE '\\'",
+            (f"%{escaped}%",),
+        ).fetchall()
     return [dict(r) for r in rows]
 
 

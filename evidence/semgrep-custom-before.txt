@@ -1,0 +1,29 @@
+                   
+                   
+┌─────────────────┐
+│ 3 Code Findings │
+└─────────────────┘
+           
+    main.py
+   ❯❯❱ semgrep.hardcoded-credential-assignment
+          ❰❰ Blocking ❱❱
+          'API_KEY' is assigned a hard-coded string literal. Secrets in source end up in git history; load
+          them from the environment (os.environ) or a secret manager instead.                             
+                                                                                                          
+           33┆ API_KEY = "sk-live-8f3c1d9e2b7a4f60bookstore-demo-key"
+            ⋮┆----------------------------------------
+   ❯❯❱ semgrep.hardcoded-credential-assignment
+          ❰❰ Blocking ❱❱
+          'SECRET_TOKEN' is assigned a hard-coded string literal. Secrets in source end up in git history;
+          load them from the environment (os.environ) or a secret manager instead.                        
+                                                                                                          
+           34┆ SECRET_TOKEN = "supersecret-admin-token"
+                     
+    static/index.html
+   ❯❯❱ semgrep.innerhtml-assignment-in-html
+          ❰❰ Blocking ❱❱
+          Assigning to innerHTML renders strings as HTML. With server- or user-provided data this is an XSS
+          sink; use textContent / createElement instead.                                                   
+                                                                                                           
+           16┆ box.innerHTML = reviews.map(t => '<p>' + t + '</p>').join('');
+

@@ -1,0 +1,31 @@
+rules:
+  - id: hardcoded-credential-assignment
+    languages: [python]
+    severity: ERROR
+    message: >-
+      '$NAME' is assigned a hard-coded string literal. Secrets in source end up in git history;
+      load them from the environment (os.environ) or a secret manager instead.
+    metadata:
+      category: security
+      subcategory: [secrets]
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+    patterns:
+      - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(api_?key|secret|token|password|passwd).*
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: .{8,}
+  - id: innerhtml-assignment-in-html
+    languages: [generic]
+    severity: ERROR
+    paths:
+      include: ["*.html"]
+    message: >-
+      Assigning to innerHTML renders strings as HTML. With server- or user-provided data this is an
+      XSS sink; use textContent / createElement instead.
+    metadata:
+      category: security
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation (XSS)"
+    pattern-regex: \.innerHTML\s*=

@@ -1,4 +1,4 @@
-# Week 8 — Security in the Age of AI: Scan, Inject, Triage
+# Week 7 — Security in the Age of AI: Scan, Inject, Triage
 
 **Student:** Yusuf Irmak
 

@@ -1,0 +1,12 @@
+$ pip-audit --path .venv site-packages (installed env, before upgrade)
+urllib3 1.26.20 PYSEC-2026-141  2.7.0
+urllib3 1.26.20 PYSEC-2026-141  2.7.0
+urllib3 1.26.20 PYSEC-2026-1999 2.5.0
+urllib3 1.26.20 PYSEC-2026-1998 2.6.0
+urllib3 1.26.20 PYSEC-2026-1994 2.6.0
+urllib3 1.26.20 PYSEC-2026-1996 2.6.3
+urllib3 1.26.20 PYSEC-2026-4177 2.8.0
+urllib3 1.26.20 PYSEC-2026-4175 2.8.0
+
+$ uv pip install --upgrade urllib3 idna requests && pip-audit --path ... (after)
+No known vulnerabilities found

@@ -1,0 +1,1 @@
+I updated the `requests` pin in `requirements.txt` from 2.25.1 to 2.34.2, and the top comment now says the outdated pin was fixed. `main.py` is unchanged; nothing was installed and pip-audit wasn't re-run, so a new audit still has to confirm the 24 findings are gone.

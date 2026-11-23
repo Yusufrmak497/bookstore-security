@@ -18,6 +18,7 @@ Run:
 Test (non-LLM paths only):
     pytest
 """
+import os
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -29,9 +30,10 @@ from pydantic import BaseModel
 
 DB_PATH = Path(__file__).parent / "bookstore.db"
 
-# VULN: hardcoded secret committed to source control
-API_KEY = "sk-live-8f3c1d9e2b7a4f60bookstore-demo-key"
-SECRET_TOKEN = "supersecret-admin-token"
+# Secrets come from the environment (see .env.example); never hard-code them.
+# No fallback value: if unset they are None so callers must handle absence.
+API_KEY = os.environ.get("BOOKSTORE_API_KEY")
+SECRET_TOKEN = os.environ.get("BOOKSTORE_ADMIN_TOKEN")
 
 app = FastAPI(title="Vulnerable Bookstore")
 

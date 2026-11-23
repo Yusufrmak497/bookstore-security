@@ -42,3 +42,27 @@ def test_search_books_like_wildcards_are_literal():
     # Escaping must not break normal matching.
     r = client.get("/books", params={"q": "Clean"})
     assert [b["title"] for b in r.json()] == ["Clean Code"]
+
+
+def test_secrets_loaded_from_env_not_hardcoded(monkeypatch):
+    # CWE-798 regression: on the vulnerable version API_KEY/SECRET_TOKEN were
+    # string literals, so they were non-None even with the env vars unset.
+    import importlib
+
+    import main
+
+    try:
+        monkeypatch.delenv("BOOKSTORE_API_KEY", raising=False)
+        monkeypatch.delenv("BOOKSTORE_ADMIN_TOKEN", raising=False)
+        importlib.reload(main)
+        assert main.API_KEY is None
+        assert main.SECRET_TOKEN is None
+
+        monkeypatch.setenv("BOOKSTORE_API_KEY", "test-api-key")
+        monkeypatch.setenv("BOOKSTORE_ADMIN_TOKEN", "test-admin-token")
+        importlib.reload(main)
+        assert main.API_KEY == "test-api-key"
+        assert main.SECRET_TOKEN == "test-admin-token"
+    finally:
+        monkeypatch.undo()
+        importlib.reload(main)

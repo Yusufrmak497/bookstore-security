@@ -66,3 +66,70 @@ def test_secrets_loaded_from_env_not_hardcoded(monkeypatch):
     finally:
         monkeypatch.undo()
         importlib.reload(main)
+
+
+def test_cors_restricted_to_allow_list(monkeypatch):
+    # CWE-942 regression: the vulnerable version used allow_origins=["*"] with
+    # credentials, so Starlette echoed back ANY Origin (incl. attacker sites)
+    # and allowed every method/header in preflight.
+    import importlib
+
+    import main
+
+    try:
+        monkeypatch.delenv("BOOKSTORE_ALLOWED_ORIGINS", raising=False)
+        importlib.reload(main)
+        c = TestClient(main.app)
+
+        # Untrusted origin: no ACAO header on simple request, preflight rejected.
+        r = c.get("/books", headers={"Origin": "https://evil.example"})
+        assert "access-control-allow-origin" not in r.headers
+        r = c.options(
+            "/books",
+            headers={
+                "Origin": "https://evil.example",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert r.status_code == 400
+        assert "access-control-allow-origin" not in r.headers
+
+        # Default allowed origin works.
+        r = c.get("/books", headers={"Origin": "http://localhost:8000"})
+        assert r.headers["access-control-allow-origin"] == "http://localhost:8000"
+
+        # Disallowed method / header rejected even for an allowed origin.
+        for method, extra in (("DELETE", None), ("POST", "X-Evil")):
+            h = {
+                "Origin": "http://localhost:8000",
+                "Access-Control-Request-Method": method,
+            }
+            if extra:
+                h["Access-Control-Request-Headers"] = extra
+            assert c.options("/reviews", headers=h).status_code == 400, method
+
+        # Allowed preflight: POST with Content-Type.
+        r = c.options(
+            "/reviews",
+            headers={
+                "Origin": "http://localhost:8000",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "Content-Type",
+            },
+        )
+        assert r.status_code == 200
+
+        # Allow-list is read from the env var (comma-separated, whitespace ok).
+        monkeypatch.setenv(
+            "BOOKSTORE_ALLOWED_ORIGINS", "https://a.example, https://b.example"
+        )
+        importlib.reload(main)
+        assert main.ALLOWED_ORIGINS == ["https://a.example", "https://b.example"]
+        c = TestClient(main.app)
+        r = c.get("/books", headers={"Origin": "https://b.example"})
+        assert r.headers["access-control-allow-origin"] == "https://b.example"
+        r = c.get("/books", headers={"Origin": "http://localhost:8000"})
+        assert "access-control-allow-origin" not in r.headers
+    finally:
+        monkeypatch.undo()
+        importlib.reload(main)

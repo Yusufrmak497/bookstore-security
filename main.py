@@ -37,13 +37,21 @@ SECRET_TOKEN = os.environ.get("BOOKSTORE_ADMIN_TOKEN")
 
 app = FastAPI(title="Vulnerable Bookstore")
 
-# VULN: wide-open CORS with credentials allowed
+# CORS: explicit allow-list from env (comma-separated). Never "*" with credentials.
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get(
+        "BOOKSTORE_ALLOWED_ORIGINS", "http://localhost:8000"
+    ).split(",")
+    if o.strip() and o.strip() != "*"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
